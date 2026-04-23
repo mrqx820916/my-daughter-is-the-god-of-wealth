@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>我的女儿是财神</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#1a1a2e;--card:#16213e;--text:#e0ddd5;--muted:#777;--gold:#c9a84c;--border:#252545;--font-size:17px}
+body{font-family:'Georgia','Noto Serif SC','Songti SC','STSong',serif;background:var(--bg);color:var(--text);min-height:100vh;padding-top:52px;padding-bottom:70px;-webkit-text-size-adjust:100%}
+/* 顶栏 */
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(22,33,62,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.top-bar h1{font-size:16px;color:var(--gold);letter-spacing:1.5px;font-weight:600}
+.top-bar .controls{display:flex;align-items:center;gap:8px}
+.btn{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;white-space:nowrap}
+.btn:hover,.btn:active{border-color:var(--gold);color:var(--gold)}
+/* 侧边栏 */
+.overlay{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.5)}
+.overlay.show{display:block}
+.sidebar{position:fixed;top:52px;left:0;bottom:0;z-index:99;width:280px;max-width:75vw;background:var(--card);border-right:1px solid var(--border);overflow-y:auto;transform:translateX(-100%);transition:transform .25s ease}
+.sidebar.show{transform:translateX(0)}
+.sidebar-inner{padding:12px 0}
+.vol-title{font-size:12px;color:var(--gold);padding:10px 20px 4px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;opacity:.8}
+.sidebar a{display:block;padding:8px 20px;font-size:14px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;transition:all .15s}
+.sidebar a:active{background:rgba(201,168,76,.1)}
+.sidebar a.active{color:var(--gold);border-left-color:var(--gold);background:rgba(201,168,76,.08)}
+.sidebar a.empty{color:#444;font-style:italic;pointer-events:none;font-size:13px}
+/* 主内容 */
+.main{max-width:720px;margin:0 auto;padding:24px 20px}
+.welcome{text-align:center;padding:60px 16px}
+.welcome h2{font-size:26px;color:var(--gold);margin-bottom:12px;font-weight:600}
+.welcome p{color:var(--muted);line-height:1.8;font-size:15px}
+.welcome .hint{margin-top:32px;color:#444;font-size:13px}
+/* 章节标题 */
+.chapter-header{margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.chapter-title{font-size:22px;color:var(--gold);line-height:1.4;font-weight:600}
+.chapter-progress{font-size:12px;color:var(--muted);margin-top:6px}
+/* 章节内容 */
+.chapter-content{font-size:var(--font-size);line-height:2;color:#ccc;text-align:justify;word-break:break-all}
+.chapter-content p{margin-bottom:1.1em;text-indent:2em}
+.chapter-content .thought{color:var(--gold);font-style:italic;opacity:.85;border-left:3px solid var(--gold);padding:10px 0 10px 16px;margin:1.2em 0;text-indent:0;background:rgba(201,168,76,.03);border-radius:0 4px 4px 0;line-height:1.9}
+/* 章节导航 */
+.chapter-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);gap:12px}
+.chapter-nav a{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--border);color:var(--text);text-decoration:none;border-radius:8px;text-align:center;font-size:14px;transition:all .2s}
+.chapter-nav a:active{border-color:var(--gold);color:var(--gold)}
+/* 底部工具栏 */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(22,33,62,.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);height:56px;display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.bottom-bar button{background:none;border:none;color:var(--muted);font-size:12px;padding:4px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s}
+.bottom-bar button:active{color:var(--gold)}
+.bottom-bar button .icon{font-size:18px;line-height:1}
+/* 字号选择器 */
+.font-size-ctrl{position:fixed;bottom:68px;left:0;right:0;z-index:101;background:var(--card);border-top:1px solid var(--border);padding:16px 24px;display:none;align-items:center;justify-content:center;gap:16px}
+.font-size-ctrl.show{display:flex}
+.font-size-ctrl .label{color:var(--muted);font-size:13px;white-space:nowrap}
+.font-size-ctrl button{background:var(--bg);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer}
+.font-size-ctrl button:active{border-color:var(--gold);color:var(--gold)}
+.font-size-ctrl .size-val{color:var(--gold);font-size:14px;min-width:36px;text-align:center}
+/* ====== 语音播放器 ====== */
+.audio-player{position:fixed;bottom:56px;left:0;right:0;z-index:105;background:rgba(22,33,62,.98);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:10px 16px;display:none;flex-direction:column;gap:6px}
+.audio-player.show{display:flex}
+.audio-player .player-top{display:flex;align-items:center;gap:10px}
+.audio-player .player-btn{background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s}
+.audio-player .player-btn:hover{background:rgba(201,168,76,.1)}
+.audio-player .player-info{flex:1;min-width:0}
+.audio-player .player-title{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.audio-player .player-role{font-size:10px;color:var(--gold);margin-top:1px}
+.audio-player .player-close{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px}
+.audio-player .player-close:hover{color:var(--gold)}
+.audio-player .progress-row{display:flex;align-items:center;gap:8px}
+.audio-player .time{font-size:10px;color:var(--muted);min-width:35px;text-align:center}
+.audio-player .seek-bar{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+.audio-player .seek-bar::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--gold);border-radius:50%;cursor:pointer}
+.audio-player .speed-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;padding:2px 6px;border-radius:3px;cursor:pointer}
+.audio-player .speed-btn:hover{border-color:var(--gold);color:var(--gold)}
+/* 语音加载遮罩 */
+.voice-overlay{position:fixed;inset:0;z-index:200;background:rgba(26,26,46,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.voice-overlay.show{display:flex}
+.voice-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.voice-overlay .voice-status{color:var(--muted);font-size:14px}
+/* Toast */
+.toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(201,168,76,.95);color:#1a1a2e;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+/* 滚动条 */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <h1>🏮 我的女儿是财神</h1>
+  <div class="controls">
+    <button class="btn" onclick="toggleSidebar()">☰ 目录</button>
+    <button class="btn" onclick="window.location.href='/voice.html'">🎙️ 试听</button>
+  </div>
+</div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar"><div class="sidebar-inner" id="sidebarInner"></div></div>
+<div class="main" id="main"></div>
+<div class="bottom-bar">
+  <button onclick="prevChapter()"><span class="icon">◁</span>上一章</button>
+  <button onclick="toggleListen()" id="listenBtn"><span class="icon">🎙️</span>听书</button>
+  <button onclick="toggleFontSize()"><span class="icon">Aa</span>字号</button>
+  <button onclick="nextChapter()"><span class="icon">▷</span>下一章</button>
+</div>
+<div class="font-size-ctrl" id="fontSizeCtrl">
+  <span class="label">字号</span>
+  <button onclick="changeFontSize(-1)">A-</button>
+  <span class="size-val" id="sizeVal">17</span>
+  <button onclick="changeFontSize(1)">A+</button>
+</div>
+<!-- 语音播放器 -->
+<div class="audio-player" id="audioPlayer">
+  <div class="player-top">
+    <button class="player-btn" id="playerPlayBtn" onclick="togglePlay()">▶</button>
+    <div class="player-info">
+      <div class="player-title" id="playerTitle">未在播放</div>
+      <div class="player-role" id="playerRole"></div>
+    </div>
+    <button class="speed-btn" id="speedBtn" onclick="cycleSpeed()">1.0x</button>
+    <button class="player-close" onclick="closePlayer()">✕</button>
+  </div>
+  <div class="progress-row">
+    <span class="time" id="currentTime">0:00</span>
+    <input type="range" class="seek-bar" id="seekBar" min="0" max="100" value="0" oninput="seekAudio(this.value)">
+    <span class="time" id="totalTime">0:00</span>
+  </div>
+</div>
+<!-- 语音加载遮罩 -->
+<div class="voice-overlay" id="voiceOverlay">
+  <div class="voice-spinner"></div>
+  <div class="voice-status" id="voiceStatus">正在合成语音...</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+let CHAPTERS=[], currentChapter=null;
+const TTS_HOST = location.port == 8083 ? location.protocol+'//'+location.hostname+':8084' : '';
+let audioEl = null, audioSegments=[], currentSegIdx=0, playbackSpeed=1.0;
+const SPEEDS = [0.8, 1.0, 1.2, 1.5, 2.0];
+let speedIdx = 1;
+
+async function init(){
+  try{
+    const r=await fetch('/api/chapters');
+    CHAPTERS=await r.json();
+    renderSidebar();
+    const last=localStorage.getItem('novel_last');
+    if(last) loadChapter(last);
+    else renderWelcome();
+  }catch(e){
+    renderWelcome();
+  }
+}
+function renderSidebar(){
+  const el=document.getElementById('sidebarInner');
+  let h='<div class="vol-title">📖 章节目录</div>';
+  CHAPTERS.forEach((v,i)=>{
+    h+=`<div class="vol-title">${v.vol}</div>`;
+    if(!v.ch.length) h+='<a class="empty">暂无章节</a>';
+    else v.ch.forEach((c,j)=>{
+      const id=`v${i}c${j}`;
+      h+=`<a href="#" data-id="${id}" onclick="loadChapter('${id}');toggleSidebar();return false">${c.num===currentChapter?'<b>':''}第${c.num}章 ${c.title}${c.num===currentChapter?'</b>':''}</a>`;
+    });
+  });
+  el.innerHTML=h;
+}
+function renderWelcome(){
+  document.getElementById('main').innerHTML=`<div class="welcome"><h2>🏮 我的女儿是财神</h2><p>天庭做了三百年财神的小姑娘偷溜下凡，<br>投胎成了被弃孕妇肚里的女儿——<br>她妈正被渣男逼着打胎。</p><p class="hint">点击上方「☰ 目录」选择章节 | 点击「🎙️ 试听」体验角色语音</p></div>`;
+}
+function loadChapter(id){
+  const[vs,cs]=id.slice(1).split('c').map(Number);
+  const ch=CHAPTERS[vs]?.ch[cs];
+  if(!ch) return;
+  currentChapter=ch.num;
+  renderSidebar();
+  const total=CHAPTERS.reduce((s,v)=>s+v.ch.length,0);
+  // 标记当前朗读角色
+  let content = ch.content;
+  // 给包含角色对话的段落加data-role属性（由后端处理）
+  document.getElementById('main').innerHTML=`<div class="chapter-header"><div class="chapter-title">第${ch.num}章 ${ch.title}</div><div class="chapter-progress">第${ch.num}章 / 共${total}章</div></div><div class="chapter-content" id="chapterContent">${content}</div><div class="chapter-nav"><a href="#" onclick="prevChapter();return false">◁ 上一章</a><a href="#" onclick="nextChapter();return false">下一章 ▷</a></div>`;
+  window.scrollTo(0,0);
+  localStorage.setItem('novel_last',id);
+  // 如果播放器开着，停止当前播放
+  stopAudio();
+}
+function getAdjacent(dir){
+  if(!currentChapter) return null;
+  for(let vi=0;vi<CHAPTERS.length;vi++){
+    for(let ci=0;ci<CHAPTERS[vi].ch.length;ci++){
+      if(CHAPTERS[vi].ch[ci].num===currentChapter){
+        const ni=ci+dir;
+        if(ni<0&&vi>0){const pv=CHAPTERS[vi-1];return`v${vi-1}c${pv.ch.length-1}`}
+        if(ni>=CHAPTERS[vi].ch.length&&vi<CHAPTERS.length-1){return`v${vi+1}c0`}
+        if(ni>=0&&ni<CHAPTERS[vi].ch.length) return`v${vi}c${ni}`;
+        return null;
+      }
+    }
+  }
+  return null;
+}
+function prevChapter(){const p=getAdjacent(-1);if(p)loadChapter(p);else showToast('已经是第一章了')}
+function nextChapter(){const p=getAdjacent(1);if(p)loadChapter(p);else showToast('已经是最后一章了')}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('overlay').classList.toggle('show');
+}
+let fontSize=parseInt(localStorage.getItem('novel_fs')||'17');
+function changeFontSize(d){
+  fontSize=Math.max(14,Math.min(24,fontSize+d));
+  document.documentElement.style.setProperty('--font-size',fontSize+'px');
+  document.getElementById('sizeVal').textContent=fontSize;
+  localStorage.setItem('novel_fs',fontSize);
+}
+function toggleFontSize(){document.getElementById('fontSizeCtrl').classList.toggle('show')}
+
+// ====== 听书功能 ======
+let chapterPrefix=''; // 当前章节的文件名前缀，如 V01C001
+
+function findChapterInfo(){
+  for(let vi=0;vi<CHAPTERS.length;vi++){
+    for(let ci=0;ci<CHAPTERS[vi].ch.length;ci++){
+      if(CHAPTERS[vi].ch[ci].num===currentChapter){
+        return {volIdx:vi, chIdx:ci, ch:CHAPTERS[vi].ch[ci]};
+      }
+    }
+  }
+  return null;
+}
+
+async function toggleListen(){
+  if(!currentChapter){showToast('请先选择一个章节');return}
+  const player=document.getElementById('audioPlayer');
+  if(player.classList.contains('show')&&audioEl){
+    togglePlay();return;
+  }
+  await startListening();
+}
+
+async function startListening(){
+  const info=findChapterInfo();
+  if(!info){showToast('无法获取章节信息');return}
+  chapterPrefix=info.ch.prefix;
+  const chapterName=`${chapterPrefix}_${info.ch.title}`;
+
+  const overlay=document.getElementById('voiceOverlay');
+  const status=document.getElementById('voiceStatus');
+  overlay.classList.add('show');
+  status.textContent='正在连接TTS引擎...';
+
+  try{
+    status.textContent='正在合成语音（首次可能需要1-2分钟）...';
+    
+    const resp=await fetch(`${TTS_HOST}/api/synthesize-chapter/${chapterPrefix}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+    });
+    
+    if(!resp.ok) throw new Error('TTS服务返回错误: '+resp.status);
+    const manifest=await resp.json();
+    
+    if(manifest.segments&&manifest.segments.length>0){
+      audioSegments=manifest.segments.filter(s=>s.file);
+      currentSegIdx=0;
+      // 存储manifest的chapter名用于拼接音频URL
+      window._manifestChapter=manifest.chapter;
+      overlay.classList.remove('show');
+      playSegments();
+    }else{
+      throw new Error('没有合成成功的音频片段');
+    }
+  }catch(e){
+    overlay.classList.remove('show');
+    showToast('听书失败: '+e.message);
+  }
+}
+
+function playSegments(){
+  if(currentSegIdx>=audioSegments.length){
+    showToast('本章朗读完毕');
+    closePlayer();
+    return;
+  }
+  const seg=audioSegments[currentSegIdx];
+  // 正确路径: /audio/{chapter_basename}/{seg_file}
+  const url=`${TTS_HOST}/audio/${window._manifestChapter}/${seg.file}`;
+  
+  if(audioEl){audioEl.pause();audioEl=null}
+  audioEl=new Audio(url);
+  audioEl.playbackRate=playbackSpeed;
+  
+  document.getElementById('audioPlayer').classList.add('show');
+  document.getElementById('playerTitle').textContent=`第${currentChapter}章 · 片段 ${currentSegIdx+1}/${audioSegments.length}`;
+  document.getElementById('playerRole').textContent=`${seg.role||'叙述者'}`;
+  document.getElementById('playerPlayBtn').textContent='⏸';
+  
+  audioEl.ontimeupdate=()=>{
+    const cur=audioEl.currentTime,dur=audioEl.duration||1;
+    document.getElementById('currentTime').textContent=formatTime(cur);
+    document.getElementById('totalTime').textContent=formatTime(dur);
+    document.getElementById('seekBar').value=cur/dur*100;
+  };
+  audioEl.onended=()=>{
+    currentSegIdx++;
+    playSegments();
+  };
+  audioEl.onerror=()=>{
+    console.warn('片段播放失败:', seg.file);
+    currentSegIdx++;
+    playSegments();
+  };
+  audioEl.play().catch(()=>{});
+}
+
+function togglePlay(){
+  if(!audioEl)return;
+  if(audioEl.paused){
+    audioEl.play();
+    document.getElementById('playerPlayBtn').textContent='⏸';
+  }else{
+    audioEl.pause();
+    document.getElementById('playerPlayBtn').textContent='▶';
+  }
+}
+
+function seekAudio(val){
+  if(!audioEl)return;
+  audioEl.currentTime=val/100*(audioEl.duration||1);
+}
+
+function cycleSpeed(){
+  speedIdx=(speedIdx+1)%SPEEDS.length;
+  playbackSpeed=SPEEDS[speedIdx];
+  if(audioEl)audioEl.playbackRate=playbackSpeed;
+  document.getElementById('speedBtn').textContent=playbackSpeed+'x';
+}
+
+function stopAudio(){
+  if(audioEl){audioEl.pause();audioEl=null}
+  audioSegments=[];currentSegIdx=0;
+  document.getElementById('audioPlayer').classList.remove('show');
+}
+
+function closePlayer(){
+  stopAudio();
+}
+
+function formatTime(s){
+  const m=Math.floor(s/60),sec=Math.floor(s%60);
+  return m+':'+(sec<10?'0':'')+sec;
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+document.documentElement.style.setProperty('--font-size',fontSize+'px');
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>我的女儿是财神 - 语音试听</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#1a1a2e;--card:#16213e;--card2:#1c2541;--text:#e0ddd5;--muted:#777;--gold:#c9a84c;--border:#252545;--red:#e74c3c;--green:#2ecc71;--blue:#3498db}
+body{font-family:'Georgia','Noto Serif SC','Songti SC','STSong',serif;background:var(--bg);color:var(--text);min-height:100vh;padding-top:52px;padding-bottom:80px}
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(22,33,62,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.top-bar h1{font-size:15px;color:var(--gold);letter-spacing:1px;font-weight:600}
+.top-bar a{color:var(--muted);text-decoration:none;font-size:13px;border:1px solid var(--border);padding:5px 12px;border-radius:6px}
+.top-bar a:hover{border-color:var(--gold);color:var(--gold)}
+.main{max-width:800px;margin:0 auto;padding:20px 16px}
+.status-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.status-dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0}
+.status-dot.ready{background:var(--green)}
+.status-dot.loading{background:var(--gold);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.status-text{font-size:13px;color:var(--muted);line-height:1.5}
+.section-title{font-size:14px;color:var(--gold);margin:24px 0 12px;font-weight:bold;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';width:3px;height:16px;background:var(--gold);border-radius:2px}
+.char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:20px}
+.char-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .2s}
+.char-card:hover{border-color:var(--gold)}
+.char-card.playing{border-color:var(--gold);box-shadow:0 0 20px rgba(201,168,76,.15)}
+.char-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.char-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.char-avatar.female{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+.char-avatar.male{background:linear-gradient(135deg,#3498db,#2980b9)}
+.char-avatar.neutral{background:linear-gradient(135deg,#95a5a6,#7f8c8d)}
+.char-name{font-size:16px;color:var(--text);font-weight:600}
+.char-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.char-sample{font-size:13px;color:#aaa;line-height:1.7;margin:10px 0;padding:10px;background:rgba(0,0,0,.2);border-radius:6px;border-left:3px solid var(--gold)}
+.char-actions{display:flex;gap:8px;margin-top:10px}
+.play-btn{background:linear-gradient(135deg,var(--gold),#b8942f);color:#1a1a2e;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;flex:1;justify-content:center}
+.play-btn:hover{opacity:.9}
+.play-btn:disabled{opacity:.4;cursor:not-allowed}
+.play-btn .spinner{width:14px;height:14px;border:2px solid rgba(26,26,46,.3);border-top-color:#1a1a2e;border-radius:50%;animation:spin .6s linear infinite;display:none}
+.play-btn.loading .spinner{display:inline-block}
+.play-btn.loading .play-icon{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.regenerate-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+.regenerate-btn:hover{border-color:var(--gold);color:var(--gold)}
+.gender-tag{font-size:10px;padding:2px 6px;border-radius:3px;margin-left:6px;font-weight:normal}
+.gender-tag.female{background:rgba(231,76,60,.15);color:#e74c3c}
+.gender-tag.male{background:rgba(52,152,219,.15);color:#3498db}
+.gender-tag.neutral{background:rgba(149,165,166,.15);color:#95a5a6}
+.batch-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-top:20px}
+.batch-btn{background:linear-gradient(135deg,var(--gold),#b8942f);color:#1a1a2e;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;width:100%;margin-top:12px}
+.batch-btn:hover{opacity:.9}
+.batch-btn:disabled{opacity:.4;cursor:not-allowed}
+.progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden;display:none}
+.progress-bar.active{display:block}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0}
+.toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(201,168,76,.95);color:#1a1a2e;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <h1>🎙️ 角色语音试听</h1>
+  <a href="/">← 返回阅读</a>
+</div>
+<div class="main">
+  <div class="status-bar">
+    <div class="status-dot loading" id="statusDot"></div>
+    <div class="status-text" id="statusText">正在连接TTS引擎...</div>
+  </div>
+
+  <div class="section-title">👩 女性角色</div>
+  <div class="char-grid" id="femaleGrid"></div>
+
+  <div class="section-title">👨 男性角色</div>
+  <div class="char-grid" id="maleGrid"></div>
+
+  <div class="section-title">🎙️ 叙述者</div>
+  <div class="char-grid" id="neutralGrid"></div>
+
+  <div class="batch-section">
+    <div style="font-size:15px;color:var(--gold);font-weight:600">🔊 批量生成试听</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px">为所有角色一次性生成试听音频，生成后可逐个试听</div>
+    <button class="batch-btn" id="batchBtn" onclick="generateAll()">🎙️ 生成全部角色试听</button>
+    <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// 所有请求通过 serve.py (8083) 代理，避免跨域问题
+const TTS_HOST = '';  // 空字符串 = 当前域
+const CHARACTERS = {
+  "小七": {gender:"female",emoji:"👶",desc:"天庭财神/女儿，童声但老灵魂",sample:"妈咪，那个垃圾股其实是个宝贝哦~本财神当年点拨过范蠡，教过沈万三呢！"},
+  "林若溪": {gender:"female",emoji:"👩",desc:"女主/妈妈，温柔坚定",sample:"我什么都不要，只要我的孩子。从今天起，我不会再让任何人欺负我们母女。"},
+  "陆北辰": {gender:"male",emoji:"🤵",desc:"男主，腹黑深情商界精英",sample:"你是我见过唯一一个让数据说谎的人。林若溪，你让我很感兴趣。"},
+  "王妈": {gender:"female",emoji:"👵",desc:"忠心保姆，泼辣心善",sample:"小姐，您放心，有我王妈在，谁也别想欺负您和小姐！"},
+  "顾明轩": {gender:"male",emoji:"🤡",desc:"渣男前夫，纨绔少爷",sample:"若溪，你听我解释，甜甜她不是你想的那种人！你怎么就不能理解我呢？"},
+  "陈甜甜": {gender:"female",emoji:"💅",desc:"小三/绿茶反派，心机女",sample:"明轩哥哥，我真的怀孕了，是个男孩呢！你不要离开我好不好？"},
+  "李氏": {gender:"female",emoji:"🐉",desc:"婆婆，尖酸刻薄老太太",sample:"嫁进我们顾家，就得守我们顾家的规矩！生不出儿子，还有什么脸待在这个家里！"},
+  "林书远": {gender:"male",emoji:"👔",desc:"女主父亲，林氏集团董事长",sample:"若溪，当年是爸爸对不起你。但你要相信，我做的一切都是为了这个家。"},
+  "陈思琪": {gender:"female",emoji:"💼",desc:"海外投资经理，干练女精英",sample:"林总，柬埔寨那边有个移动支付项目，我觉得非常有潜力，值得重点跟进。"},
+  "叙述者": {gender:"neutral",emoji:"📖",desc:"旁白/叙述者，中性沉稳",sample:"金七七在天庭待了三百年。三百年来，她每天的工作就是坐在财运司的办公桌后面，翻看人间各地的财运报表。"}
+};
+
+let currentAudio = null;
+let currentCard = null;
+
+function renderCards(){
+  const grids = {female:'femaleGrid',male:'maleGrid',neutral:'neutralGrid'};
+  for(const[name,info]of Object.entries(CHARACTERS)){
+    const grid = document.getElementById(grids[info.gender]);
+    const genderLabel = info.gender==='female'?'女':info.gender==='male'?'男':'中';
+    grid.innerHTML += `
+      <div class="char-card" id="card-${name}">
+        <div class="char-header">
+          <div class="char-avatar ${info.gender}">${info.emoji}</div>
+          <div>
+            <span class="char-name">${name}</span>
+            <span class="gender-tag ${info.gender}">${genderLabel}</span>
+            <div class="char-desc">${info.desc}</div>
+          </div>
+        </div>
+        <div class="char-sample">"${info.sample}"</div>
+        <div class="char-actions">
+          <button class="play-btn" id="btn-${name}" onclick="playSample('${name}')">
+            <span class="play-icon">▶</span>
+            <span class="spinner"></span>
+            试听
+          </button>
+          <button class="regenerate-btn" onclick="generateOne('${name}')">🔄</button>
+        </div>
+      </div>`;
+  }
+}
+
+function stopCurrent(){
+  if(currentAudio){currentAudio.pause();currentAudio=null}
+  if(currentCard){currentCard.classList.remove('playing');currentCard=null}
+}
+
+async function playSample(name){
+  stopCurrent();
+  const card = document.getElementById('card-'+name);
+  const btn = document.getElementById('btn-'+name);
+  const info = CHARACTERS[name];
+
+  // 先尝试播放已有文件
+  const audioUrl = `/audio/samples/${encodeURIComponent(name)}.wav`;
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try{
+    // 检查文件是否存在
+    const resp = await fetch(audioUrl, {method:'HEAD'});
+    if(resp.ok){
+      currentAudio = new Audio(audioUrl);
+      currentCard = card;
+      card.classList.add('playing');
+      btn.classList.remove('loading');
+      btn.innerHTML = '<span class="play-icon">⏸</span><span class="spinner"></span>播放中';
+      currentAudio.play();
+      currentAudio.onended = ()=>{
+        card.classList.remove('playing');
+        btn.innerHTML = '<span class="play-icon">▶</span><span class="spinner"></span>试听';
+        btn.disabled = false;
+        currentAudio = null; currentCard = null;
+      };
+    } else {
+      // 需要先生成
+      await generateOne(name);
+    }
+  }catch(e){
+    btn.classList.remove('loading');
+    btn.innerHTML = '<span class="play-icon">▶</span><span class="spinner"></span>试听';
+    btn.disabled = false;
+    showToast('连接TTS引擎失败，请确认tts_server.py已启动');
+  }
+}
+
+async function generateOne(name){
+  const btn = document.getElementById('btn-'+name);
+  const info = CHARACTERS[name];
+  btn.classList.add('loading');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="play-icon">▶</span><span class="spinner"></span>生成中...';
+
+  try{
+    // 用GET试听API直接获取音频
+    const resp = await fetch(`/api/tts/synthesize_sample?name=${encodeURIComponent(name)}&text=${encodeURIComponent(info.sample)}`);
+    if(!resp.ok) throw new Error('合成失败');
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    stopCurrent();
+    currentAudio = new Audio(url);
+    currentCard = document.getElementById('card-'+name);
+    currentCard.classList.add('playing');
+    btn.classList.remove('loading');
+    btn.innerHTML = '<span class="play-icon">⏸</span><span class="spinner"></span>播放中';
+    currentAudio.play();
+    currentAudio.onended = ()=>{
+      currentCard.classList.remove('playing');
+      btn.innerHTML = '<span class="play-icon">▶</span><span class="spinner"></span>试听';
+      btn.disabled = false;
+      currentAudio = null; currentCard = null;
+      URL.revokeObjectURL(url);
+    };
+  }catch(e){
+    btn.classList.remove('loading');
+    btn.innerHTML = '<span class="play-icon">▶</span><span class="spinner"></span>试听';
+    btn.disabled = false;
+    showToast('生成失败: '+e.message);
+  }
+}
+
+async function generateAll(){
+  const btn = document.getElementById('batchBtn');
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  btn.disabled = true;
+  btn.textContent = '生成中...';
+  bar.classList.add('active');
+
+  const names = Object.keys(CHARACTERS);
+  for(let i=0;i<names.length;i++){
+    const name = names[i];
+    const info = CHARACTERS[name];
+    fill.style.width = ((i+1)/names.length*100)+'%';
+    btn.textContent = `生成中 (${i+1}/${names.length}) ${name}...`;
+    try{
+      const resp = await fetch(`/api/tts/synthesize_sample?name=${encodeURIComponent(name)}&text=${encodeURIComponent(info.sample)}`);
+      if(!resp.ok) throw new Error('fail');
+    }catch(e){
+      console.error(`${name} failed:`,e);
+    }
+  }
+
+  btn.textContent = '✅ 全部生成完成！';
+  btn.disabled = false;
+  setTimeout(()=>{btn.textContent='🎙️ 生成全部角色试听';bar.classList.remove('active')},3000);
+  showToast('全部角色试听生成完成！');
+}
+
+async function checkTTSStatus(){
+  // 先检查是否有已生成的音频文件（静态文件，不会被阻塞）
+  try{
+    const testResp = await fetch('/audio/samples/叙述者.wav',{method:'HEAD',signal:AbortSignal.timeout(3000)});
+    if(testResp.ok){
+      document.getElementById('statusDot').className='status-dot ready';
+      document.getElementById('statusText').textContent='TTS引擎可用 ✅ 已有试听音频可直接播放，点试听按钮即可';
+      return;
+    }
+  }catch(e){}
+  // 静态文件没有，尝试API检测TTS是否在线
+  try{
+    const resp = await fetch(`/api/tts/characters`,{signal:AbortSignal.timeout(5000)});
+    if(resp.ok){
+      document.getElementById('statusDot').className='status-dot ready';
+      document.getElementById('statusText').textContent='TTS引擎已连接 ✅ 点击「试听」按钮生成并播放角色语音';
+      return;
+    }
+  }catch(e){}
+  document.getElementById('statusDot').className='status-dot';
+  document.getElementById('statusText').innerHTML='TTS引擎未启动 ❌ 请先运行: <code style="background:rgba(201,168,76,.15);padding:2px 6px;border-radius:3px;color:var(--gold)">source ~/xiaoshuo-venv/bin/activate && python tts_server.py --serve</code>';
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+renderCards();
+checkTTSStatus();
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# 音频文件（太大，不提交）
+audio/
+
+# 备份
+chapters_backup_before_split/
+
+# CosyVoice tokenizer资源（不需要）
+asset/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 构建输出
+dist/
+
+# 模型文件（太大）
+*.bin
+*.safetensors
+*.gguf
