@@ -218,9 +218,9 @@ if __name__ == '__main__':
                 chapter_count = sum(len(v) for v in parse_chapters().values())
                 vol_count = len(parse_chapters())
                 print(f"📖 小说阅读服务已启动")
-                print(f"   地址: http://0.0.0.0:{PORT}")
+                print(f"   地址: http://127.0.0.1:{PORT}")
                 print(f"   共 {vol_count} 卷 {chapter_count} 章")
-                print(f"   语音试听: http://0.0.0.0:{PORT}/voice.html")
+                print(f"   语音试听: http://127.0.0.1:{PORT}/voice.html")
                 httpd.serve_forever()
         except OSError as e:
             if 'Address already in use' in str(e):
