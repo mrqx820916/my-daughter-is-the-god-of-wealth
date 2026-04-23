@@ -1,120 +1,82 @@
 #!/usr/bin/env python3
 """
 为各角色生成专属参考音频
-用 CosyVoice3 instruct2 模式 + 强化指令生成不同音色的 base reference，
-后续合成时用这些 reference 作为 prompt_wav，音色差异会大很多。
+用微软 Edge TTS 生成真正不同声线的参考音频（男声/女声/童声/老年声），
+再用 librosa 重采样到 CosyVoice3 要求的 24000Hz。
 """
-import os, sys
+import os, sys, asyncio
 
-COSYVOICE_DIR = os.environ.get("COSYVOICE_DIR", r"D:\CosyVoice")
-sys.path.insert(0, os.path.join(COSYVOICE_DIR, 'third_party/Matcha-TTS'))
-sys.path.insert(0, COSYVOICE_DIR)
+import soundfile as sf
+import numpy as np
+import librosa
 
-import torch
-import torchaudio
-from cosyvoice.cli.cosyvoice import AutoModel
-
-MODEL_DIR = os.path.join(COSYVOICE_DIR, "pretrained_models", "Fun-CosyVoice3-0.5B")
-DEFAULT_WAV = os.path.join(COSYVOICE_DIR, "asset", "zero_shot_prompt.wav")
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio", "prompts")
+TARGET_SR = 24000  # CosyVoice3 采样率
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# 各声线的参考文本和强化指令
-# 关键：用非常具体的中文描述音色特征，让模型区分
+# Edge TTS 中文语音列表：
+#   男声: YunxiNeural(年轻), YunjianNeural(成熟), YunyangNeural(新闻主播)
+#   女声: XiaoxiaoNeural(温柔), XiaoyiNeural(活泼), XiaomoNeural(成熟)
+#         XiaoruiNeural(老年), XiaoshuangNeural(儿童), XiaozhenNeural(知性)
+#         XiaochenNeural(干练)
+
+# 角色 → (Edge TTS voice, 参考文本)
 VOICE_PROFILES = {
-    "ref_child_girl": {
-        "text": "妈咪，你看那个气球好漂亮呀，我想要那个粉色的！",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个四五岁的小女孩，声音非常稚嫩、清脆、甜美、可爱，"
-            "带着奶声奶气的童真感，语调活泼上扬，充满天真和快乐。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_female_gentle": {
-        "text": "没事的，一切都会好起来的。我会一直在你身边，不管发生什么。",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个二十五六岁的年轻女性，声音温柔、舒缓、柔和，"
-            "带有坚定的力量感，语速适中，充满母性的温暖和关怀。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_male_deep": {
-        "text": "这件事我自有安排，你不必担心。该来的总会来。",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个三十多岁的成熟男性，声音低沉、浑厚、富有磁性，"
-            "音调偏低，语速沉稳，充满自信和掌控力，像商业精英。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_male_arrogant": {
-        "text": "你算什么东西？也配跟我说这种话？真是笑话！",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个二十多岁的年轻男性，声音偏高、尖锐，"
-            "语气傲慢急躁，带有不屑和轻蔑，像一个纨绔子弟。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_male_authoritative": {
-        "text": "这个决定我已经做完了，不需要再讨论。按我说的去做。",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个五十多岁的中年男性企业家，声音浑厚威严，"
-            "充满权威感，语速缓慢沉稳，像一个久经商场的集团董事长。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_female_sharp": {
-        "text": "哼，就凭她那种出身，也配进我们家的门？真是笑死人了！",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个六十多岁的老年女性，声音尖锐、刺耳、刻薄，"
-            "语速快，充满嫌弃和刻薄，像一个尖酸的老太太。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_auntie": {
-        "text": "小姐您放心，有我老婆子在，谁也别想欺负您！我这就去收拾她！",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个五十多岁的中年妇女，声音略带沙哑，"
-            "嗓门大，热情泼辣，像一个心直口快的阿姨。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_female_sweet_fake": {
-        "text": "哥哥，人家不是故意的嘛，你就别生气了好不好？嗯~",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个二十多岁的年轻女性，声音甜美嗲气，"
-            "刻意装可怜，带着做作和心机的感觉。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_female_pro": {
-        "text": "根据我的分析，这个项目的投资回报率在百分之二十以上，建议立即推进。",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个三十岁左右的职业女性，声音干练、清晰、自信，"
-            "语速较快，条理清晰，像一个精英投资经理。"
-            "<|endofprompt|>"
-        ),
-    },
-    "ref_narrator": {
-        "text": "夕阳的余晖洒在城市的天际线上，一切看似平静，暗涌却已在悄然酝酿。",
-        "instruct": (
-            "You are a helpful assistant. "
-            "说话者是一个三十多岁的女性播音员，声音中性沉稳、清晰流畅，"
-            "语速均匀，带有讲述感，像一个专业的有声书演播者。"
-            "<|endofprompt|>"
-        ),
-    },
+    # 小七：儿童女声 → 活泼女声 XiaoyiNeural（最接近童声）
+    "ref_child_girl": (
+        "zh-CN-XiaoyiNeural",
+        "妈咪你看那个气球好漂亮呀，我想要那个粉色的！",
+    ),
+    # 林若溪：温柔知性女声 → XiaoxiaoNeural（温柔知性）
+    "ref_female_gentle": (
+        "zh-CN-XiaoxiaoNeural",
+        "没事的，一切都会好起来的。我会一直在你身边，不管发生什么。",
+    ),
+    # 陆北辰：成熟磁性男声 → YunjianNeural（激情沉稳）
+    "ref_male_deep": (
+        "zh-CN-YunjianNeural",
+        "这件事我自有安排，你不必担心。该来的总会来。",
+    ),
+    # 王妈：中年妇女 → 辽宁方言 XiaobeiNeural（幽默大嗓门，更像中年妇女）
+    "ref_auntie": (
+        "zh-CN-liaoning-XiaobeiNeural",
+        "小姐您放心，有我老婆子在，谁也别想欺负您！我这就去收拾她！",
+    ),
+    # 顾明轩：年轻傲慢男声 → YunxiNeural（阳光年轻男声）
+    "ref_male_arrogant": (
+        "zh-CN-YunxiNeural",
+        "你算什么东西？也配跟我说这种话？真是笑话！",
+    ),
+    # 陈甜甜：甜美做作女声 → XiaoyiNeural（活泼，已用于小七，这里用不同文本）
+    #   但为了区分，改用 XiaoxiaoNeural + 不同语调文本
+    "ref_female_sweet_fake": (
+        "zh-CN-XiaoxiaoNeural",
+        "哥哥，人家不是故意的嘛，你就别生气了好不好？人家真的很喜欢你嘛。",
+    ),
+    # 李氏：老年尖锐女声 → 陕西方言 XiaoniNeural（尖锐、有老太太感）
+    "ref_female_sharp": (
+        "zh-CN-shaanxi-XiaoniNeural",
+        "哼，就凭她那种出身，也配进我们家的门？真是笑死人了！",
+    ),
+    # 林书远：权威男声 → YunyangNeural（专业可靠新闻主播）
+    "ref_male_authoritative": (
+        "zh-CN-YunyangNeural",
+        "这个决定我已经做完了，不需要再讨论。按我说的去做。",
+    ),
+    # 陈思琪：干练女精英 → YunxiaNeural（可爱男童声作对比太奇怪）
+    #   用 XiaoxiaoNeural 但不同语调文本
+    "ref_female_pro": (
+        "zh-CN-XiaoxiaoNeural",
+        "根据我的分析，这个项目的投资回报率在百分之二十以上，建议立即推进。",
+    ),
+    # 叙述者：中性播音腔 → YunyangNeural（新闻主播，男女皆可的播音感）
+    "ref_narrator": (
+        "zh-CN-YunyangNeural",
+        "夕阳的余晖洒在城市的天际线上，一切看似平静，暗涌却已在悄然酝酿。",
+    ),
 }
 
-# 角色 → 参考音频映射
+# 角色 → 参考音频文件名映射
 CHAR_REF_MAP = {
     "小七": "ref_child_girl.wav",
     "林若溪": "ref_female_gentle.wav",
@@ -129,45 +91,51 @@ CHAR_REF_MAP = {
 }
 
 
-def generate_refs():
-    print(f"Loading model from {MODEL_DIR}...")
-    model = AutoModel(model_dir=MODEL_DIR)
-    print(f"Model loaded. Sample rate: {model.sample_rate}")
+async def _generate_one(name, voice, text):
+    """用 Edge TTS 生成一段音频"""
+    import edge_tts
+    output_path = os.path.join(OUTPUT_DIR, f"{name}.wav")
+    tmp_path = output_path + ".tmp.mp3"
 
-    for name, profile in VOICE_PROFILES.items():
+    print(f"  Generating {name} [{voice}]...")
+    try:
+        communicate = edge_tts.Communicate(text, voice)
+        await communicate.save(tmp_path)
+
+        # 读取并重采样到 24000Hz
+        audio, sr = librosa.load(tmp_path, sr=None, mono=True)
+        if sr != TARGET_SR:
+            audio = librosa.resample(audio, orig_sr=sr, target_sr=TARGET_SR)
+        sf.write(output_path, audio, TARGET_SR)
+        duration = len(audio) / TARGET_SR
+        print(f"    -> {output_path} ({duration:.1f}s, {TARGET_SR}Hz)")
+    except Exception as e:
+        print(f"    -> FAILED: {e}")
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
+async def generate_refs():
+    print(f"Target sample rate: {TARGET_SR}Hz")
+    print(f"Output directory: {OUTPUT_DIR}\n")
+
+    # 逐个生成（Edge TTS 限流）
+    for name, (voice, text) in VOICE_PROFILES.items():
         output_path = os.path.join(OUTPUT_DIR, f"{name}.wav")
         if os.path.exists(output_path):
             print(f"  [SKIP] {name} (already exists)")
             continue
-
-        print(f"  Generating {name}...")
-        all_audio = []
-        for j in model.inference_instruct2(
-            profile["text"],
-            profile["instruct"],
-            DEFAULT_WAV,
-            stream=False
-        ):
-            speech = j['tts_speech'].cpu()
-            if speech.dim() > 1:
-                speech = speech.squeeze(0)
-            all_audio.append(speech)
-
-        if all_audio:
-            audio_tensor = torch.cat(all_audio, dim=0)
-            torchaudio.save(output_path, audio_tensor.unsqueeze(0), model.sample_rate)
-            duration = audio_tensor.shape[0] / model.sample_rate
-            print(f"    -> {output_path} ({duration:.1f}s)")
-        else:
-            print(f"    -> FAILED: no audio generated")
+        await _generate_one(name, voice, text)
 
     # 打印角色映射
     print(f"\n角色→参考音频映射:")
     for char, ref in CHAR_REF_MAP.items():
-        print(f"  {char}: {ref}")
+        voice_name = VOICE_PROFILES[ref.replace('.wav', '')][0]
+        print(f"  {char}: {ref} ({voice_name})")
 
     print(f"\n参考音频目录: {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":
-    generate_refs()
+    asyncio.run(generate_refs())
