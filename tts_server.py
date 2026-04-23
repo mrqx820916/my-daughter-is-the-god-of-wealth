@@ -45,73 +45,130 @@ CHARACTERS = {
         "desc": "天庭财神/女儿，童声但老灵魂",
         "sample_text": "妈咪，那个垃圾股其实是个宝贝哦~本财神当年点拨过范蠡，教过沈万三呢！",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用小女孩的语气说话，声音清脆活泼。<|endofprompt|>",
+        "ref_wav": "ref_child_girl.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个四五岁的小女孩，声音非常稚嫩、清脆、甜美、可爱，"
+            "带着奶声奶气的童真感，语调活泼上扬，充满天真和快乐。"
+            "<|endofprompt|>"
+        ),
     },
     "林若溪": {
         "gender": "female",
         "desc": "女主/妈妈，温柔坚定",
         "sample_text": "我什么都不要，只要我的孩子。从今天起，我不会再让任何人欺负我们母女。",
-        "mode": "zero_shot",
-        "prompt_wav": "lin_ruoxi_prompt.wav",
-        "prompt_text": "希望你以后能够做的比我还好呦。",
+        "mode": "instruct2",
+        "ref_wav": "ref_female_gentle.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个二十五六岁的年轻女性，声音温柔、舒缓、柔和，"
+            "带有坚定的力量感，语速适中，充满母性的温暖和关怀。"
+            "<|endofprompt|>"
+        ),
     },
     "陆北辰": {
         "gender": "male",
         "desc": "男主，腹黑深情商界精英",
         "sample_text": "你是我见过唯一一个让数据说谎的人。林若溪，你让我很感兴趣。",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用低沉磁性的成熟男声说话。<|endofprompt|>",
+        "ref_wav": "ref_male_deep.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个三十多岁的成熟男性，声音低沉、浑厚、富有磁性，"
+            "音调偏低，语速沉稳，充满自信和掌控力，像商业精英。"
+            "<|endofprompt|>"
+        ),
     },
     "王妈": {
         "gender": "female",
         "desc": "忠心保姆，泼辣心善，偏老年女声",
         "sample_text": "小姐，您放心，有我王妈在，谁也别想欺负您和小姐！",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用中年妇女的语气说话，声音略带沙哑，热情泼辣。<|endofprompt|>",
+        "ref_wav": "ref_auntie.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个五十多岁的中年妇女，声音略带沙哑，"
+            "嗓门大，热情泼辣，像一个心直口快的阿姨。"
+            "<|endofprompt|>"
+        ),
     },
     "顾明轩": {
         "gender": "male",
         "desc": "渣男前夫，纨绔少爷",
         "sample_text": "若溪，你听我解释，甜甜她不是你想的那种人！你怎么就不能理解我呢？",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用年轻男性的语气说话，声音略带傲慢和急躁。<|endofprompt|>",
+        "ref_wav": "ref_male_arrogant.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个二十多岁的年轻男性，声音偏高、尖锐，"
+            "语气傲慢急躁，带有不屑和轻蔑，像一个纨绔子弟。"
+            "<|endofprompt|>"
+        ),
     },
     "陈甜甜": {
         "gender": "female",
         "desc": "小三/绿茶反派，心机女",
         "sample_text": "明轩哥哥，我真的怀孕了，是个男孩呢！你不要离开我好不好？",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用年轻女性的语气说话，声音甜美但略带做作。<|endofprompt|>",
+        "ref_wav": "ref_female_sweet_fake.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个二十多岁的年轻女性，声音甜美嗲气，"
+            "刻意装可怜，带着做作和心机的感觉。"
+            "<|endofprompt|>"
+        ),
     },
     "李氏": {
         "gender": "female",
         "desc": "婆婆，尖酸刻薄老太太",
         "sample_text": "嫁进我们顾家，就得守我们顾家的规矩！生不出儿子，还有什么脸待在这个家里！",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用老年妇女的语气说话，声音尖锐刻薄。<|endofprompt|>",
+        "ref_wav": "ref_female_sharp.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个六十多岁的老年女性，声音尖锐、刺耳、刻薄，"
+            "语速快，充满嫌弃和刻薄，像一个尖酸的老太太。"
+            "<|endofprompt|>"
+        ),
     },
     "林书远": {
         "gender": "male",
         "desc": "女主父亲，林氏集团董事长",
         "sample_text": "若溪，当年是爸爸对不起你。但你要相信，我做的一切都是为了这个家。",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用中年男性的语气说话，声音沉稳威严。<|endofprompt|>",
+        "ref_wav": "ref_male_authoritative.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个五十多岁的中年男性企业家，声音浑厚威严，"
+            "充满权威感，语速缓慢沉稳，像一个久经商场的集团董事长。"
+            "<|endofprompt|>"
+        ),
     },
     "陈思琪": {
         "gender": "female",
         "desc": "海外投资经理，干练女精英",
         "sample_text": "林总，柬埔寨那边有个移动支付项目，我觉得非常有潜力，值得重点跟进。",
         "mode": "instruct2",
-        "instruct_text": "You are a helpful assistant. 请用干练职业女性的语气说话，声音清晰自信。<|endofprompt|>",
+        "ref_wav": "ref_female_pro.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个三十岁左右的职业女性，声音干练、清晰、自信，"
+            "语速较快，条理清晰，像一个精英投资经理。"
+            "<|endofprompt|>"
+        ),
     },
     "叙述者": {
         "gender": "neutral",
         "desc": "旁白/叙述者，中性沉稳",
         "sample_text": "金七七在天庭待了三百年。三百年来，她每天的工作就是坐在财运司的办公桌后面，翻看人间各地的财运报表。",
-        "mode": "zero_shot",
-        # 叙述者使用林若溪的参考音频（如无专属音频）
-        "prompt_wav": "lin_ruoxi_prompt.wav",
-        "prompt_text": "希望你以后能够做的比我还好呦。",
+        "mode": "instruct2",
+        "ref_wav": "ref_narrator.wav",
+        "instruct_text": (
+            "You are a helpful assistant. "
+            "说话者是一个三十多岁的女性播音员，声音中性沉稳、清晰流畅，"
+            "语速均匀，带有讲述感，像一个专业的有声书演播者。"
+            "<|endofprompt|>"
+        ),
     },
 }
 
@@ -138,6 +195,13 @@ def get_engine():
 
 def _get_prompt_wav(char_info):
     """获取角色的参考音频路径"""
+    # 优先使用角色专属 ref_wav（生成的参考音频）
+    ref_file = char_info.get("ref_wav", "")
+    if ref_file:
+        ref_path = os.path.join(PROMPT_DIR, ref_file)
+        if os.path.exists(ref_path):
+            return ref_path
+    # 其次使用用户提供的 prompt_wav（zero_shot 模式）
     prompt_file = char_info.get("prompt_wav", "")
     if prompt_file:
         local_path = os.path.join(PROMPT_DIR, prompt_file)
