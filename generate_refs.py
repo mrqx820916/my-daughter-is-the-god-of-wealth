@@ -69,9 +69,9 @@ VOICE_PROFILES = {
         "zh-CN-XiaoxiaoNeural",
         "根据我的分析，这个项目的投资回报率在百分之二十以上，建议立即推进。",
     ),
-    # 叙述者：中性播音腔 → YunyangNeural（新闻主播，男女皆可的播音感）
+    # 叙述者：女声播音腔
     "ref_narrator": (
-        "zh-CN-YunyangNeural",
+        "zh-CN-XiaoxiaoNeural",
         "夕阳的余晖洒在城市的天际线上，一切看似平静，暗涌却已在悄然酝酿。",
     ),
 }
