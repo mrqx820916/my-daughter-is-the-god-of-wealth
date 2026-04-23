@@ -10,10 +10,10 @@
 """
 import os, sys, json, re, time, argparse
 
-# CosyVoice 路径（WSL2 中）
+# CosyVoice 路径
 COSYVOICE_DIR = os.environ.get(
     "COSYVOICE_DIR",
-    os.path.expanduser("~/CosyVoice")
+    r"D:\CosyVoice"
 )
 sys.path.insert(0, os.path.join(COSYVOICE_DIR, 'third_party/Matcha-TTS'))
 sys.path.insert(0, COSYVOICE_DIR)
@@ -329,6 +329,9 @@ def _split_text(text, max_len=200):
 
 def _synthesize_chunk_zero_shot(model, chunk, prompt_text, prompt_wav):
     """zero_shot 模式合成单段"""
+    # CosyVoice3 要求 prompt_text 包含 <|endofprompt|> 标记
+    if '<|endofprompt|>' not in prompt_text:
+        prompt_text = prompt_text.rstrip() + ' <|endofprompt|>'
     all_audio = []
     for j in model.inference_zero_shot(
         chunk, prompt_text, prompt_wav, stream=False
