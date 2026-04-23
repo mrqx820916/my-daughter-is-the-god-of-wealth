@@ -58,9 +58,9 @@ VOICE_PROFILES = {
         "zh-CN-shaanxi-XiaoniNeural",
         "哼，就凭她那种出身，也配进我们家的门？真是笑死人了！",
     ),
-    # 林书远：权威男声 → YunyangNeural（专业可靠新闻主播）
+    # 林书远：深沉权威男声 → YunjianNeural（浑厚深沉）
     "ref_male_authoritative": (
-        "zh-CN-YunyangNeural",
+        "zh-CN-YunjianNeural",
         "这个决定我已经做完了，不需要再讨论。按我说的去做。",
     ),
     # 陈思琪：干练女精英 → YunxiaNeural（可爱男童声作对比太奇怪）
